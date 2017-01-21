@@ -163,6 +163,12 @@
 (defmethod content-equal (a b)
   (equal a b))
 
+(defun complete-p (object)
+  (typep object 'standard-complete-object))
+
+(defun incomplete-p (object)
+  (typep object 'standard-incomplete-object))
+
 ;;------------------------------------------------------------
 
 (defmacro with-contents ((&rest slot-names) instance &body body)
