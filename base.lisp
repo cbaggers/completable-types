@@ -52,24 +52,32 @@
          ,(gen-rec-comparator incomplete 'equal slot-names)))))
 
 (defun parse-rec-slots (slots)
-  (labels ((listify (x) (if (listp x) x (list x))))
+  (labels ((listify (x) (if (listp x) x (list x)))
+           (type-pred-p (form)
+             (and form
+                  (= (length form) 1)
+                  (symbolp (first form)))))
     (let* ((slots (mapcar #'listify slots))
            (slot-names (mapcar #'first slots))
            (pred-forms (mapcar #'rest slots))
            (predicates
-            (loop :for (pred-args . pred-body) :in pred-forms :collect
-               (cond
-                 ((and (null pred-args) (null pred-body))
-                  nil)
-                 ((func-form-p pred-args)
-                  (assert (null pred-body) ()
-                          "defcompletable: malformed slot ~a"
-                          (cons pred-args pred-body))
-                  pred-args)
-                 ((and (= 1 (length pred-args)) pred-body)
-                  `(lambda ,pred-args ,@pred-body))
-                 (t (error "defcompletable: malformed slot ~a"
-                           (cons pred-args pred-body)))))))
+            (loop :for pred-form :in pred-forms :collect
+               (destructuring-bind (&optional pred-args &rest pred-body)
+                   (if (type-pred-p pred-form)
+                       `((x) (typep x ',@pred-form))
+                       pred-form)
+                 (cond
+                   ((and (null pred-args) (null pred-body))
+                    nil)
+                   ((func-form-p pred-args)
+                    (assert (null pred-body) ()
+                            "defcompletable: malformed slot ~a"
+                            (cons pred-args pred-body))
+                    pred-args)
+                   ((and (= 1 (length pred-args)) pred-body)
+                    `(lambda ,pred-args ,@pred-body))
+                   (t (error "defcompletable: malformed slot ~a"
+                             (cons pred-args pred-body))))))))
       (values slot-names predicates))))
 
 (defun gen-rec-print-object (name slot-names)
