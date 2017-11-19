@@ -55,7 +55,11 @@ In order to complete an object the values in the incomplete object may need to s
       (sprocket-count #'numberp)
       (name (o) (and (typep o 'string) (> (length o) 2))))
 
-The predicate can either be declared as a function literal (which must start with `#'`) or you may write the predicate inline, in a lambda-like fashion.
+The predicate can be defined as one of the following:
+
+- as a function literal (which must start with `#'`)
+- inline, in a lambda-like fashion.
+- as a symbol, in which case it is equivalent to ((x) (typep x 'symbol-given))
 
 When defining inline predicated you provide an argument list (which must contain only one argument) and then the body of the predicate.
 
